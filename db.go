@@ -2,8 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,8 +39,22 @@ ORDER BY h.hor
 LIMIT $5
 `
 
+var (
+	sqlDurations = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "sql_durations_seconds",
+		Help:    "sql request latency distributions.",
+		Buckets: prometheus.ExponentialBuckets(0.001, 1.5, 25),
+	})
+)
+
+func init() {
+	prometheus.MustRegister(sqlDurations)
+}
+
 func NextDeparture(db *sql.DB, request SchedulesRequest) ([]ExpectedStopTime, error) {
+	begin := time.Now()
 	row, err := db.Query(query, request.Stop, request.Line, request.Way, request.Datetime, request.Count)
+	sqlDurations.Observe(time.Since(begin).Seconds())
 	if err != nil {
 		return nil, errors.Wrap(err, "query failed")
 	}
