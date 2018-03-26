@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"database/sql"
+
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"

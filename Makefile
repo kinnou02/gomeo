@@ -31,7 +31,6 @@ lint: ## Run all the linters
 		--enable=staticcheck \
 		--enable=gofmt \
 		--enable=goimports \
-		--enable=misspell \
 		--enable=errcheck \
 		--enable=vet \
 		--enable=vetshadow \
