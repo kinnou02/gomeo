@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 )
@@ -39,6 +40,29 @@ func init_log(logjson bool) {
 	logrus.SetLevel(logrus.DebugLevel)
 }
 
+var (
+	httpDurations = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "http_durations_seconds",
+		Help:    "http request latency distributions.",
+		Buckets: prometheus.ExponentialBuckets(0.001, 1.5, 25),
+	},
+		[]string{"handler"},
+	)
+)
+
+func init() {
+	prometheus.MustRegister(httpDurations)
+}
+
+func Instrument(handler string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		observer := httpDurations.With(prometheus.Labels{"handler": handler})
+		begin := time.Now()
+		c.Next()
+		observer.Observe(time.Since(begin).Seconds())
+	}
+}
+
 func main() {
 	listen := flag.String("listen", ":8080", "[IP]:PORT to listen")
 	logjson := flag.Bool("logjson", false, "enable json logging")
@@ -55,7 +79,7 @@ func main() {
 	}
 
 	r := setupRouter()
-	r.GET("/schedules", ScheduleHandler(db))
+	r.GET("/schedules", Instrument("schedules"), ScheduleHandler(db))
 	// Listen and Server in 0.0.0.0:8080
 	err = r.Run(*listen)
 	if err != nil {
