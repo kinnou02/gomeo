@@ -11,29 +11,29 @@ const query string = `
 SELECT
 	coalesce(destination.nom_stand_dst, destination.nom_dst),
 	t.code_graphic,
-	horaire.hor
+	h.hor
 FROM
 	parcours
 		JOIN arret_sur_parcours USING ( ref_prc )
 		JOIN destination USING ( ref_dst )
 		JOIN arret a USING ( ref_art )
 		JOIN ligne l USING (ref_lig)
-		JOIN horaire USING ( ref_apr )
+		JOIN horaire h USING ( ref_apr )
 		LEFT JOIN arret t ON ( t.ref_art = parcours.art_dest )
-		LEFT JOIN vehicule USING ( ref_crs )
+		LEFT JOIN vehicule v USING ( ref_crs )
 WHERE
 	a.num_art = $1 AND
 	l.num_lig = $2 AND
 	sens = $3 AND
-	coalesce( horaire.hor + ( avance - retard ), hor) BETWEEN $4 AND
+	coalesce( h.hor + ( v.avance - v.retard ), h.hor) BETWEEN $4 AND
 	CASE
 	WHEN $4::time <= rezo_get_hdeb_exploit()::time
 		THEN rezo_get_hdeb_exploit()::time
 	ELSE
 		'23:59:59'::time
 	END
-	AND (vehicule.actif = true OR vehicule.actif IS NULL)
-ORDER BY hor
+	AND (v.actif = true OR v.actif IS NULL)
+ORDER BY h.hor
 LIMIT $5
 `
 
