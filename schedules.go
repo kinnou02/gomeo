@@ -13,7 +13,7 @@ import (
 type SchedulesRequest struct {
 	Line     int       `form:"line" binding:"required"`
 	Stop     int       `form:"stop" binding:"required"`
-	Way      string    `form:"way" binding:"required"`
+	Way      string    `form:"way" binding:"required,len=1,containsany=AR"`
 	Datetime time.Time `form:"datetime" time_format:"150405"`
 	Count    int       `form:"count" `
 }
@@ -22,7 +22,6 @@ func ScheduleHandler(db *sql.DB) gin.HandlerFunc {
 	fn := func(c *gin.Context) {
 		var request SchedulesRequest
 		if err := c.ShouldBindQuery(&request); err != nil {
-			log.Errorf("FATAL: %+v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}

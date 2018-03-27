@@ -26,3 +26,5 @@ TODO
  - parse query with the original format
  - handle error: no departure isn't the same thing than an invalid route point
  - handle multiple database
+ - query by "graphicCode"
+ - SIRI?

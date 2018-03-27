@@ -66,7 +66,10 @@ func Instrument(handler string) gin.HandlerFunc {
 func main() {
 	listen := flag.String("listen", ":8080", "[IP]:PORT to listen")
 	logjson := flag.Bool("logjson", false, "enable json logging")
-	connStr := flag.String("connstr", "host=localhost user=timeo password=timeo dbname=timeo sslmode=disable", "")
+	connStr := flag.String("connstr",
+		"host=localhost user=timeo password=timeo dbname=timeo sslmode=disable",
+		"connection string to the postgres database",
+	)
 	flag.Parse()
 	init_log(*logjson)
 	db, err := sql.Open("postgres", *connStr)
@@ -80,7 +83,7 @@ func main() {
 
 	r := setupRouter()
 	r.GET("/schedules", Instrument("schedules"), ScheduleHandler(db))
-	// Listen and Server in 0.0.0.0:8080
+
 	err = r.Run(*listen)
 	if err != nil {
 		logrus.Errorf("failure to start: %+v", err)
